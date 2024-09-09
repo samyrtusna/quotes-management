@@ -1,0 +1,5 @@
+snippets/
+__pycache__/
+*.txt
+*.rest
+config.json
