@@ -20,7 +20,6 @@ import {
   Alert,
 } from "@mui/material";
 import axios from "axios";
-import { useSelector } from "react-redux";
 import ProductService from "../service/ProductService";
 import FormatMoney from "../utils/MoneyFormat";
 

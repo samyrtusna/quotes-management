@@ -1,22 +1,35 @@
 import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { fetchScraps } from "../features/scrapSlices";
+import scrapsService from "../service/ScrapsService";
+import { setScraps } from "../features/scrapSlices";
 import Title from "./communs/Title";
 import CustomTable from "./communs/CostumTable";
 
 function Scraps() {
-  const {
-    loading = false,
-    Scraps = [],
-    error = "",
-  } = useSelector((state) => state.Scraps);
+  const { Scraps } = useSelector((state) => state.Scraps);
   const dispatch = useDispatch();
+  const [error, setError] = useState("");
+
+  const fetchScraps = async () => {
+    try {
+      const { data } = await scrapsService.getAll();
+      dispatch(setScraps(data));
+    } catch (error) {
+      setError(error.message);
+    }
+  };
 
   useEffect(() => {
-    dispatch(fetchScraps());
+    fetchScraps();
   }, []);
 
-  if (loading) return <p>Loading...</p>;
+  if (!Scraps && !error) {
+    return (
+      <Box sx={{ display: "flex" }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
   if (error) return <p>Error: {error}</p>;
 
   const sortedScraps = [...Scraps].sort((a, b) => {

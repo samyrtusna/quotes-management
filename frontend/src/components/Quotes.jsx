@@ -1,20 +1,37 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { FetchQuotes } from "../features/quoteSlices";
+import QuoteService from "../service/QuoteService";
+import { setQuotes } from "../features/quoteSlices";
 import Title from "./communs/Title";
 import CustomTable from "./communs/CostumTable";
 import { Link } from "react-router-dom";
 import FormatMoney from "../utils/MoneyFormat";
 
 function Quotes() {
-  const { loading, quotes, error } = useSelector((state) => state.Quotes);
+  const { quotes } = useSelector((state) => state.Quotes);
   const dispatch = useDispatch();
+  const [error, setError] = useState("");
+
+  const fetchQuotes = async () => {
+    try {
+      const { data } = await QuoteService.getAll();
+      dispatch(setQuotes(data));
+    } catch (error) {
+      setError(error.message);
+    }
+  };
 
   useEffect(() => {
-    dispatch(FetchQuotes());
+    fetchQuotes();
   }, []);
 
-  if (loading) return <p>Loading...</p>;
+  if (!quotes && !error) {
+    return (
+      <Box sx={{ display: "flex" }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
   if (error) return <p>Error: {error}</p>;
 
   const columns = [

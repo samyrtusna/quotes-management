@@ -1,30 +1,40 @@
-// QuoteDetails.js
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Box, CircularProgress, Grid, Paper, Typography } from "@mui/material";
 import { useParams } from "react-router-dom";
 import CustomTable from "./communs/CostumTable";
-import { FetchSingleQuote } from "../features/quoteSlices";
+import QuoteService from "../service/QuoteService";
+import { setQuotes } from "../features/quoteSlices";
 import RawProductsDrawer from "./RawProductsDrawer";
 import FormatMoney from "../utils/MoneyFormat";
 
 function QuoteDetails() {
-  const { loading, quotes, error } = useSelector((state) => state.Quotes);
+  const { quotes } = useSelector((state) => state.Quotes);
   const dispatch = useDispatch();
   const { id } = useParams();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selectedRawProducts, setSelectedRawProducts] = useState([]);
+  const [error, setError] = useState("");
 
   const label = false;
 
+  const FetchSingleQuote = async (id) => {
+    try {
+      const { data } = await QuoteService.detail(id);
+      dispatch(setQuotes(data));
+    } catch (error) {
+      setError(error.message);
+      console.log(error.message);
+    }
+  };
+
   useEffect(() => {
-    dispatch(FetchSingleQuote(id));
+    FetchSingleQuote(id);
   }, [dispatch, id]);
 
-  if (loading) {
+  if (!quotes && !error) {
     return (
-      <Box sx={{ display: "flex", alignItems: "center" }}>
-        <Typography>Loading</Typography>
+      <Box sx={{ display: "flex" }}>
         <CircularProgress />
       </Box>
     );

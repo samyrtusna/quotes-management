@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import RawService from "../service/RawService";
 import { useNavigate, useParams } from "react-router-dom";
-import { useSelector } from "react-redux";
 import CustomForm from "./communs/CustomForm";
 
 function RawProductForm() {

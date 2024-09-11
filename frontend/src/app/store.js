@@ -17,5 +17,6 @@ const Store = configureStore({
     Quotes: QuotesReducer,
     Scraps: ScrapsReducer,
   },
+  devTools: process.env.NODE_ENV !== "production",
 });
 export default Store;

@@ -15,7 +15,9 @@ import HomeIcon from "@mui/icons-material/Home";
 import LightModeIcon from "@mui/icons-material/LightMode";
 import DarkModeIcon from "@mui/icons-material/DarkMode";
 import { useDispatch, useSelector } from "react-redux";
-import { logout } from "../features/authSlices";
+import { setLogout } from "../features/authSlices";
+import authService from "../service/authService";
+
 import { useState } from "react";
 
 const pages = [
@@ -41,8 +43,11 @@ function Navbar({ darkMode, setDarkMode }) {
   };
 
   const handleLogout = async () => {
+    console.log("Token : ", token);
     try {
-      await dispatch(logout()).then(navigate("/"));
+      await authService.logout({ token: token });
+      dispatch(setLogout());
+      navigate("/");
       console.log("User logged out successfully");
     } catch (error) {
       console.error("Logout failed", error);
@@ -170,58 +175,49 @@ function Navbar({ darkMode, setDarkMode }) {
             {darkMode ? <LightModeIcon /> : <DarkModeIcon />}
           </IconButton>
           <Box sx={{ flexGrow: 0 }}>
-            <Tooltip title="User Menu">
-              <IconButton
-                onClick={handleOpenUserMenu}
-                sx={{ p: 0 }}
-              >
-                {token ? (
+            {token ? (
+              <Tooltip title="User Menu">
+                <IconButton
+                  onClick={handleOpenUserMenu}
+                  sx={{ p: 0 }}
+                >
                   <Avatar sx={{ bgcolor: "orange" }}>{avatarLetter}</Avatar>
-                ) : (
-                  <Avatar
-                    alt="Default User"
-                    src="/static/images/avatar/2.jpg"
-                  />
-                )}
-              </IconButton>
-            </Tooltip>
-            <Menu
-              sx={{ mt: "45px" }}
-              id="menu-appbar"
-              anchorEl={anchorElUser}
-              anchorOrigin={{
-                vertical: "top",
-                horizontal: "right",
-              }}
-              keepMounted
-              transformOrigin={{
-                vertical: "top",
-                horizontal: "right",
-              }}
-              open={Boolean(anchorElUser)}
-              onClose={handleCloseUserMenu}
-            >
-              {settings.map((setting) =>
-                (setting === "Signup" || setting === "Login") && !token ? (
-                  <MenuItem
-                    key={setting}
-                    onClick={() => handleUserMenuClick(setting)}
-                  >
-                    <Typography textAlign="center">{setting}</Typography>
+                </IconButton>
+              </Tooltip>
+            ) : (
+              <Box>
+                <Button
+                  onClick={handleOpenUserMenu}
+                  variant="text"
+                  color="inherit"
+                >
+                  Login
+                </Button>
+                <Menu
+                  sx={{ mt: "45px" }}
+                  id="menu-appbar"
+                  anchorEl={anchorElUser}
+                  anchorOrigin={{
+                    vertical: "top",
+                    horizontal: "right",
+                  }}
+                  keepMounted
+                  transformOrigin={{
+                    vertical: "top",
+                    horizontal: "right",
+                  }}
+                  open={Boolean(anchorElUser)}
+                  onClose={handleCloseUserMenu}
+                >
+                  <MenuItem onClick={() => handleUserMenuClick("Login")}>
+                    <Typography textAlign="center">Login</Typography>
                   </MenuItem>
-                ) : (
-                  setting === "Logout" &&
-                  token && (
-                    <MenuItem
-                      key={setting}
-                      onClick={() => handleUserMenuClick(setting)}
-                    >
-                      <Typography textAlign="center">{setting}</Typography>
-                    </MenuItem>
-                  )
-                )
-              )}
-            </Menu>
+                  <MenuItem onClick={() => handleUserMenuClick("Signup")}>
+                    <Typography textAlign="center">Signup</Typography>
+                  </MenuItem>
+                </Menu>
+              </Box>
+            )}
           </Box>
         </Toolbar>
       </Container>

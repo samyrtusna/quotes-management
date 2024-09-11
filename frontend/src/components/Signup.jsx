@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useDispatch } from "react-redux";
-import { signup } from "../features/authSlices";
+import authService from "../service/authService";
+import { setLogin } from "../features/authSlices";
 import { useNavigate } from "react-router-dom";
 import CustomForm from "./communs/CustomForm";
 
@@ -35,7 +36,7 @@ const Signup = () => {
         break;
     }
   };
-  const handleSignup = (e) => {
+  const handleSignup = async (e) => {
     e.preventDefault();
     if (!first_name) {
       setErrorMessage("Please enter your first name");
@@ -48,8 +49,19 @@ const Signup = () => {
     } else if (!password) {
       setErrorMessage("Please enter your password");
     } else {
-      dispatch(signup({ first_name, last_name, email, username, password }));
-      navigate("/login");
+      try {
+        const { data } = await authService.signup({
+          first_name,
+          last_name,
+          email,
+          username,
+          password,
+        });
+        dispatch(setLogin(data));
+        navigate("/login");
+      } catch (error) {
+        console.log(error.message);
+      }
     }
   };
 

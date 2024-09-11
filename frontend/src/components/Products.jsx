@@ -1,29 +1,41 @@
 import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { fetchProduct } from "../features/productSlices";
+import ProductService from "../service/ProductService";
 import Title from "./communs/Title";
 import CustomTable from "./communs/CostumTable";
 import ProductForm from "./ProductsForm";
+import { setProducts } from "../features/productSlices";
 
 function Products() {
-  const {
-    loading = false,
-    Products = [],
-    error = "",
-  } = useSelector((state) => state.Products);
+  const { Products } = useSelector((state) => state.Products);
   const dispatch = useDispatch();
 
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    dispatch(fetchProduct());
+    const fetchProducts = async () => {
+      try {
+        const { data } = await ProductService.getAll();
+        dispatch(setProducts(data));
+      } catch (error) {
+        setError(error.message);
+      }
+    };
+    fetchProducts();
   }, []);
 
   const handleRowClick = (product) => {
     setSelectedProduct(product);
   };
 
-  if (loading) return <p>Loading...</p>;
+  if (!Products && !error) {
+    return (
+      <Box sx={{ display: "flex" }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
   if (error) return <p>Error: {error}</p>;
 
   const columns = [

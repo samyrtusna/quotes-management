@@ -1,10 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
 import ProductService from "../service/ProductService";
-import ProductFamillyService from "../service/FamillyService";
+import FamillyService from "../service/FamillyService";
 import ProductDetailsService from "../service/ProductDetailsService";
 import RawService from "../service/RawService";
-import { fetchProductFamilly } from "../features/famillySlices";
-import { fetchRawProduct } from "../features/rawSlices";
+import { setProductsFamilly } from "../features/famillySlices";
 import { useNavigate, useParams } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import {
@@ -22,6 +21,8 @@ import {
   TableRow,
   Autocomplete,
 } from "@mui/material";
+
+const allowedCharacters = "0123456789().+-*/HW".split("");
 
 function ProductForm() {
   const navigate = useNavigate();
@@ -70,10 +71,18 @@ function ProductForm() {
     }
   };
 
+  const fetchProductFamilly = async () => {
+    try {
+      const { data } = await FamillyService.getAll();
+      dispatch(setProductsFamilly(data));
+    } catch (error) {
+      console.log(error.message);
+    }
+  };
+
   useEffect(() => {
-    dispatch(fetchProductFamilly());
+    fetchProductFamilly();
     setFamillyList(ProductsFamilly);
-    dispatch(fetchRawProduct());
     setRawList(rawProducts);
   }, []);
 
@@ -96,6 +105,10 @@ function ProductForm() {
     }
     setRawProduct("");
     setFormula("");
+  };
+
+  const handleCharacterClick = (char) => {
+    setFormula((prevFormula) => prevFormula + char);
   };
 
   const handleRowClick = (index) => {
@@ -309,10 +322,44 @@ function ProductForm() {
           <TextField
             label="Formula"
             value={formula}
-            onChange={(e) => setFormula(e.target.value)}
+            inputProps={{ readOnly: true }}
             fullWidth
           />
+          <Grid
+            item
+            xs={12}
+          >
+            <Box
+              sx={{
+                display: "flex",
+                flexWrap: "wrap",
+                justifyContent: "space-between",
+                marginTop: 1,
+              }}
+            >
+              {allowedCharacters.map((char, index) => (
+                <Button
+                  key={index}
+                  variant="text"
+                  size="small"
+                  onClick={() => handleCharacterClick(char)}
+                  sx={{ minWidth: 30 }}
+                >
+                  {char}
+                </Button>
+              ))}
+              <Button
+                variant="text"
+                size="small"
+                sx={{ minWidth: 64 }}
+                onClick={() => setFormula((prev) => prev.slice(0, -1))}
+              >
+                Backspace
+              </Button>
+            </Box>
+          </Grid>
         </Grid>
+
         <Grid
           item
           xs={12}
@@ -320,6 +367,7 @@ function ProductForm() {
         >
           <Button
             variant="contained"
+            disabled={!rawProduct || !formula}
             color="primary"
             onClick={handleAddOrUpdateTableRow}
             sx={{ marginTop: 2 }}

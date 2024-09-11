@@ -1,22 +1,34 @@
 import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { fetchProductFamilly } from "../features/famillySlices";
+import { setProductsFamilly } from "../features/famillySlices";
+import FamillyService from "../service/FamillyService";
 import Title from "./communs/Title";
 import CustomTable from "./communs/CostumTable";
 
 function ProductsFamilly() {
-  const {
-    loading = false,
-    ProductsFamilly = [],
-    error = "",
-  } = useSelector((state) => state.ProductsFamilly);
+  const { ProductsFamilly } = useSelector((state) => state.ProductsFamilly);
   const dispatch = useDispatch();
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    dispatch(fetchProductFamilly());
+    const fetchProductsFamilly = async () => {
+      try {
+        const { data } = await FamillyService.getAll();
+        dispatch(setProductsFamilly(data));
+      } catch (error) {
+        setError(error.message);
+      }
+    };
+    fetchProductsFamilly();
   }, []);
 
-  if (loading) return <p>Loading...</p>;
+  if (!ProductsFamilly && !error) {
+    return (
+      <Box sx={{ display: "flex" }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
   if (error) return <p>Error: {error}</p>;
 
   const columns = [
