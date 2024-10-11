@@ -1,4 +1,5 @@
-snippets/
+/snippets/
+
 __pycache__/
 *.txt
 *.rest
