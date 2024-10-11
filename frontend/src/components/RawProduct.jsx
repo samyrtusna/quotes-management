@@ -8,7 +8,8 @@ import FormatMoney from "../utils/MoneyFormat";
 import CircularProgress from "@mui/material/CircularProgress";
 import Box from "@mui/material/Box";
 
-function RawProduct() {
+function RawProduct(props) {
+  const { darkMode } = props;
   const { rawProducts } = useSelector((state) => state.RawProducts);
   const [error, setError] = useState("");
   const dispatch = useDispatch();
@@ -53,6 +54,7 @@ function RawProduct() {
         title="Raw Products"
         customForm="RawProductForm"
         addButton="yes"
+        darkMode={darkMode}
       >
         Add Product
       </Title>
@@ -62,6 +64,7 @@ function RawProduct() {
         data={rawProducts}
         customForm="RawProductForm"
         pointerField="label"
+        darkMode={darkMode}
       />
     </>
   );

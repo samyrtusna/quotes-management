@@ -3,17 +3,21 @@ import FamillyService from "../service/FamillyService";
 import { useNavigate, useParams } from "react-router-dom";
 import CustomForm from "./communs/CustomForm";
 
-function ProductsFamillyForm() {
+function ProductsFamillyForm(props) {
+  const { darkMode } = props;
   const navigate = useNavigate();
   const { id } = useParams();
   const inputRef = useRef();
   const [code, setCode] = useState("");
   const [label, setLabel] = useState("");
+  const [isEmpty, setIsEmpty] = useState(true);
 
   const handleChange = (name, value) => {
     switch (name) {
       case "code":
-        setCode(value);
+        if (!isNaN(value)) {
+          setCode(value);
+        }
         break;
       case "label":
         setLabel(value);
@@ -40,6 +44,14 @@ function ProductsFamillyForm() {
     }
     inputRef.current.focus();
   }, [id]);
+
+  useEffect(() => {
+    if (code && label) {
+      setIsEmpty(false);
+    } else {
+      setIsEmpty(true);
+    }
+  }, [code, label]);
 
   const addProductsFamilly = async () => {
     const newProduct = { code, label };
@@ -95,6 +107,9 @@ function ProductsFamillyForm() {
       handleDelete={handleDelete}
       isEditMode={id !== "new"}
       inputRef={inputRef}
+      elementToDelete="Products Familly"
+      darkMode={darkMode}
+      isEmpty={isEmpty}
     >
       Add
     </CustomForm>

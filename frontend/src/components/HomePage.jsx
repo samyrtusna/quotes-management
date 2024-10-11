@@ -3,7 +3,8 @@ import * as React from "react";
 import { Container, Typography, Button, Stack } from "@mui/material";
 import { Link } from "react-router-dom";
 
-function HomePage() {
+function HomePage(props) {
+  const { darkMode } = props;
   return (
     <Container
       maxWidth="md"
@@ -29,25 +30,37 @@ function HomePage() {
       >
         <Button
           variant="contained"
-          color="primary"
           component={Link}
           to="/RawProducts"
+          sx={{
+            bgcolor: darkMode ? "#5e6b6b" : "#26b7f0",
+            color: darkMode ? "#ffffff" : "#000000",
+            "&:hover": { bgcolor: darkMode && "#3a4242" },
+          }}
         >
           View Raw Products
         </Button>
         <Button
           variant="contained"
-          color="primary"
           component={Link}
           to="/Products"
+          sx={{
+            bgcolor: darkMode ? "#5e6b6b" : "#26b7f0",
+            color: darkMode ? "#ffffff" : "#000000",
+            "&:hover": { bgcolor: darkMode && "#3a4242" },
+          }}
         >
           View Products
         </Button>
         <Button
           variant="contained"
-          color="primary"
           component={Link}
           to="/Productsfamilly"
+          sx={{
+            bgcolor: darkMode ? "#5e6b6b" : "#26b7f0",
+            color: darkMode ? "#ffffff" : "#000000",
+            "&:hover": { bgcolor: darkMode && "#3a4242" },
+          }}
         >
           View Product Families
         </Button>

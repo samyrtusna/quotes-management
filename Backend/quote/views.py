@@ -1,4 +1,6 @@
 from rest_framework import status, viewsets
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.exceptions import NotAuthenticated
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
@@ -14,22 +16,24 @@ from .serializers import QuoteSerializer, QuoteDetailsSerializer, CreateQuoteSer
 
 class QuoteViewSet(viewsets.ModelViewSet):
 
-    permission_classes = (UserPermission,)
+    permission_classes = (UserPermission,IsAuthenticated)
     
 
     def get_queryset(self): 
+        if not self.request.user.is_authenticated:
+            raise NotAuthenticated('You are not authenticated')
         if self.request.user.is_superuser:
             return Quote.objects.all()
         return Quote.objects.filter(owner=self.request.user)
 
 
     def get_serializer_class(self):
-        if self.action in ["create", "update", "partial_update"]:
+        if self.action in ["create", "update"]:
             return CreateQuoteSerializer
         return QuoteSerializer
 
     
-    def raw_product_quantity(self, H, W, formula):
+    def raw_product_quantity(self,formula,H,W):
         try:
             allowed_chars = "0123456789+-*/().HW "
             for char in formula:
@@ -41,7 +45,7 @@ class QuoteViewSet(viewsets.ModelViewSet):
             return result
         except Exception as e:
             return str(e)
-        
+         
 
 
     @action(detail=False, methods=["post"])
@@ -58,7 +62,6 @@ class QuoteViewSet(viewsets.ModelViewSet):
 
         try:
             product = Product.objects.get(code=product_code, owner=user)
-            print("product : ", product)
         except ObjectDoesNotExist:
             return Response(
                 {"error": "One or more products not found."},
@@ -72,7 +75,6 @@ class QuoteViewSet(viewsets.ModelViewSet):
 
         try:
             product_details = ProductDetails.objects.filter(product=product.id)
-            print("product_details : ", product_details)
         except ObjectDoesNotExist:
             return Response(
                 {"error": "One or more productDetails not found."},
@@ -85,9 +87,9 @@ class QuoteViewSet(viewsets.ModelViewSet):
             )
 
 
-        for product_detail in product_details :
+        for detail in product_details :
             try:
-                raw_product = RawProduct.objects.get(id=product_detail.raw_product.id, owner=user) 
+                raw_product = RawProduct.objects.get(id=detail.raw_product.id, owner=user) 
             except ObjectDoesNotExist:
                 return Response(
                     {"error": "One or more raw products not found."},
@@ -99,7 +101,8 @@ class QuoteViewSet(viewsets.ModelViewSet):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
-            raw_quantity = self.raw_product_quantity(height, width, product_detail.formula)
+            formula_result = self.raw_product_quantity(detail.formula, height, width)
+            raw_quantity = formula_result *int( detail.slices_quantity)
             if raw_product.mesure != "m²":
                 raw_quantity = math.ceil(raw_quantity)
             cost = raw_quantity * int(raw_product.price) / raw_product.length
@@ -116,6 +119,16 @@ class QuoteViewSet(viewsets.ModelViewSet):
                     "total_cost": round(cost * quantity),
                 }
             raw_products_consumed.append(raw_consumed)
+
+        for i, a in enumerate(raw_products_consumed):
+            for j, b in enumerate(raw_products_consumed):
+                if i != j and a["code"] == b["code"]:
+                    b["quantity_by_product"] = sum([b["quantity_by_product"], a["quantity_by_product"]])
+                    b["cost"] = sum([b["cost"], a["cost"]])
+                    b["total_quantity"] = sum([b["total_quantity"], a["total_quantity"]])
+                    b["total_cost"] = sum([b["total_cost"], a["total_cost"]])
+                    raw_products_consumed.remove(a)
+
             
         product_cost = round(sum(costs))
         product_amount = product_cost * 1.5
@@ -131,7 +144,7 @@ class QuoteViewSet(viewsets.ModelViewSet):
             },
             status=status.HTTP_200_OK,
         )
-
+ 
 
 
     @action(detail=False, methods=["post"])
@@ -147,10 +160,12 @@ class QuoteViewSet(viewsets.ModelViewSet):
 
 class QuoteDetailsViewSet(viewsets.ModelViewSet):
 
-    permission_classes = (UserPermission,)
+    permission_classes = (UserPermission,IsAuthenticated)
     
     
     def get_queryset(self): 
+        if not self.request.user.is_authenticated:
+            raise NotAuthenticated('You are not authenticated')
         if self.request.user.is_superuser:
             return QuoteDetails.objects.all()
         return QuoteDetails.objects.filter(owner=self.request.user) 

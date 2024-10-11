@@ -5,7 +5,8 @@ import FamillyService from "../service/FamillyService";
 import Title from "./communs/Title";
 import CustomTable from "./communs/CostumTable";
 
-function ProductsFamilly() {
+function ProductsFamilly(props) {
+  const { darkMode } = props;
   const { ProductsFamilly } = useSelector((state) => state.ProductsFamilly);
   const dispatch = useDispatch();
   const [error, setError] = useState("");
@@ -42,6 +43,7 @@ function ProductsFamilly() {
         title="Products Familly"
         customForm="productsFamillyForm"
         addButton="yes"
+        darkMode={darkMode}
       >
         Add Product
       </Title>
@@ -51,6 +53,7 @@ function ProductsFamilly() {
         data={ProductsFamilly}
         customForm="productsFamillyForm"
         pointerField="label"
+        darkMode={darkMode}
       />
     </>
   );

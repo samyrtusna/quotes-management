@@ -1,18 +1,26 @@
+from collections import defaultdict
 from rest_framework import viewsets
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.exceptions import NotAuthenticated
 from rest_framework.decorators import action
 from rest_framework import status
 from rest_framework.response import Response
 from authentication.permissions import UserPermission
+from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from .models import Scraps
 from .serializers import ScrapsSerializer, CreateScrapsSerializer
 from rawProducts.models.raw_products import RawProduct
+from products.models import Product
+from productDetails.models import ProductDetails
 
 
 class ScrapsViewset(viewsets.ModelViewSet):
     
-    permission_classes = (UserPermission,)
+    permission_classes = (UserPermission, IsAuthenticated)
 
     def get_queryset(self): 
+        if not self.request.user.is_authenticated:
+            raise NotAuthenticated('You are not authenticated')
         if self.request.user.is_superuser:
             return Scraps.objects.all()
         return Scraps.objects.filter(owner=self.request.user)
@@ -21,165 +29,128 @@ class ScrapsViewset(viewsets.ModelViewSet):
         if self.action in ["create", "update", "partial_update"]:
             return CreateScrapsSerializer
         return ScrapsSerializer
+    
+    def item_length(self,formula,H,W):
+        try:
+            allowed_chars = "0123456789+-*/().HW "
+            for char in formula:
+                if char not in allowed_chars:
+                    raise ValueError(f"Invalid character found in equation: {char}")
 
-    def scraps_list(self, item_bars, scraps, bar):
+            
+            result = eval(formula)
+            return result
+        except Exception as e:
+            return str(e)
+        
+
+    def scraps_list(self, item_bars,bar, length):
+        scraps = []
+       
         while len(item_bars) > 0:
             min_item = min(item_bars)
             if min_item > bar:
                 scraps.append(bar)
-                bar = 6000
+                bar = length
             else:
-                max_item = max([item for item in item_bars if item <= bar])
+                max_item = max([item for item in item_bars if item 
+                <= bar])
                 bar -= max_item
                 item_bars.remove(max_item)
+  
         scraps.append(bar)
+        print(f"Final scraps: {scraps}")
         return scraps
 
     @action(detail=False, methods=["POST"])
     def calculate_scraps_bars(self, request):
-        data = self.request.data
-        height = (float(data["height"])) * 1000
-        width = (float(data["width"])) * 1000
-        quantity = int(data["quantity"])
-        product_code = data["code"]
-        volet_roulant = data.get("volet_roulant", False)
-        product_scraps = []
+        data = request.data
+        user = self.request.user
+        bar_slices = []
+        scraps = []
 
-        if product_code == 101:
-            cadre = RawProduct.objects.get(code=103)
-            ouvrant = RawProduct.objects.get(code=105)
-            parclose = RawProduct.objects.get(code=514)
+        for p in data:
+            index = p["index"]
+            height = (float(p["height"])) * 1000
+            width = (float(p["width"])) * 1000
+            quantity = int(p["quantity"])
+            product_code = p["code"]
 
-            cadre_bars = [height, width] * 2 * quantity
-            scraps = []
+            try:
+                product = Product.objects.get(code=product_code, owner=user)
+            except ObjectDoesNotExist:
+                return Response(
+                    {"error": "One or more products not found."},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+            except MultipleObjectsReturned:
+                return Response(
+                    {"error": "Multiple products found for one or more codes."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
-            bar = 6000
-            self.scraps_list(cadre_bars, scraps, bar)
+            try:
+                product_details = ProductDetails.objects.filter(product=product.id)
+            except ObjectDoesNotExist:
+                return Response(
+                    {"error": "One or more productDetails not found."},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+            except MultipleObjectsReturned:
+                return Response(
+                    {"error": "Multiple productDetails found for one or more codes."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+        
+            for detail in product_details :
+                try:
+                    raw_product = RawProduct.objects.get(id=detail.raw_product.id, owner=user) 
+                except ObjectDoesNotExist:
+                    return Response(
+                        {"error": "One or more raw products not found."},
+                        status=status.HTTP_404_NOT_FOUND,
+                    )
+                except MultipleObjectsReturned:
+                    return Response(
+                        {"error": "Multiple raw products found for one or more codes."},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+               
+                if raw_product.mesure == "m":
+                    slice_length = self.item_length(detail.formula, height, width)
+                    slice = {raw_product.code : int(slice_length)}
+                    detail_slices=[slice for _ in range (detail.slices_quantity*quantity)]
+                    bar_slices.append(detail_slices)
+        # print (bar_slices)
+        # print()
 
-            cadre_scraps = list(map(lambda x: {"code": cadre.code, "label": cadre.label, "length": x/1000, "mesure": cadre.mesure}, scraps))
 
-            ouvrant_bars = [height, width] * 2 * quantity
-            scraps = []
-            bar = 6000
-            self.scraps_list(ouvrant_bars, scraps, bar)
-            ouvrant_scraps = list(map(lambda x: {"code": ouvrant.code, "label": ouvrant.label, "length": x/1000, "mesure": ouvrant.mesure}, scraps))
+        
+        grouped_slices = defaultdict(list)
+        for sublist in bar_slices:
+            for dictionary in sublist:
+                for key, value in dictionary.items():
+                    grouped_slices[key].append(value)
 
-            parclose_bars = [height, width] * 2 * quantity
-            scraps = []
-            bar = 6000
-            self.scraps_list(parclose_bars, scraps, bar)
-            parclose_scraps = list(map(lambda x: {"code": parclose.code, "label": parclose.label, "length": x/1000, "mesure": parclose.mesure}, scraps))
+        grouped_slices_list = list(grouped_slices.items())
+        print ("grouped slices list : ", grouped_slices_list)
 
-            product_scraps = cadre_scraps + ouvrant_scraps + parclose_scraps
+        keys=0
+      
+        for key, values in grouped_slices_list:
+            
+            raw_products = RawProduct.objects.get(code=key, owner=user)
+            print("raw_product : ", raw_products.label)
+            length = raw_products.length * 1000
+            print("length : ", length)
+            slices_list = values
+            print("slices_list : ",list (slices_list))
+            scraps_list = self.scraps_list(slices_list, length, length)
 
-        if product_code in [102, 103]:
-            cadre = RawProduct.objects.get(code=103)
-            ouvrant = RawProduct.objects.get(code=105)
-            traverse = RawProduct.objects.get(code=107)
-            parclose = RawProduct.objects.get(code=514)
+            for item in scraps_list:
+                scrap= {"code" :  key, "label" : raw_products.label, "length" : item/1000, "mesure" : raw_products.mesure }
+                print ("Scraps : ", scrap)
+                scraps.append(scrap)
+        
 
-            cadre_bars = [height, width] * 2 * quantity
-            scraps = []
-
-            bar = 6000
-            self.scraps_list(cadre_bars, scraps, bar)
-
-            cadre_scraps = list(map(lambda x: {"code": cadre.code, "label": cadre.label, "length": x/1000, "mesure": cadre.mesure}, scraps))
-
-            ouvrant_bars = [height, width] * 2 * quantity
-            scraps = []
-            bar = 6000
-            self.scraps_list(ouvrant_bars, scraps, bar)
-            ouvrant_scraps = list(map(lambda x: {"code": ouvrant.code, "label": ouvrant.label, "length": x/1000, "mesure": ouvrant.mesure}, scraps))
-
-            traverse_bars = [width] * quantity
-            scraps = []
-            bar = 6000
-            self.scraps_list(traverse_bars, scraps, bar)
-            traverse_scraps = list(map(lambda x: {"code": traverse.code, "label": traverse.label, "length": x/1000, "mesure": traverse.mesure}, scraps))
-
-            parclose_bars = [height, width] * 2 * quantity
-            scraps = []
-            bar = 6000
-            self.scraps_list(parclose_bars, scraps, bar)
-            parclose_scraps = list(map(lambda x: {"code": parclose.code, "label": parclose.label, "length": x/1000, "mesure": parclose.mesure}, scraps))
-
-            product_scraps = cadre_scraps + ouvrant_scraps + traverse_scraps + parclose_scraps
-
-        if product_code == 201:
-            cadre = RawProduct.objects.get(code=225)
-            ouvrant = RawProduct.objects.get(code=206)
-            parclose = RawProduct.objects.get(code=214)
-            chicane = RawProduct.objects.get(code=216)
-            rail = RawProduct.objects.get(code=217)
-
-            cadre_bars = [height, width] * 2 * quantity
-            scraps = []
-            bar = 6000
-            self.scraps_list(cadre_bars, scraps, bar)
-            cadre_scraps = list(map(lambda x: {"code": cadre.code, "label": cadre.label, "length": x/1000, "mesure": cadre.mesure}, scraps))
-
-            ouvrant_bars = [height, width / 2] * 4 * quantity
-            scraps = []
-            bar = 6000
-            self.scraps_list(ouvrant_bars, scraps, bar)
-            ouvrant_scraps = list(map(lambda x: {"code": ouvrant.code, "label": ouvrant.label, "length": x/1000, "mesure": ouvrant.mesure}, scraps))
-
-            parclose_bars = [height, width / 2] * 4 * quantity
-            scraps = []
-            bar = 6000
-            self.scraps_list(parclose_bars, scraps, bar)
-            parclose_scraps = list(map(lambda x: {"code": parclose.code, "label": parclose.label, "length": x/1000, "mesure": parclose.mesure}, scraps))
-
-            chicane_bars = [height] * 2 * quantity
-            scraps = []
-            bar = 6000
-            self.scraps_list(chicane_bars, scraps, bar)
-            chicane_scraps = list(map(lambda x: {"code": chicane.code, "label": chicane.label, "length": x/1000, "mesure": chicane.mesure}, scraps))
-
-            rail_bars = [width] * 2 * quantity
-            scraps = []
-            bar = 6000
-            self.scraps_list(rail_bars, scraps, bar)
-            rail_scraps = list(map(lambda x: {"code": rail.code, "label": rail.label, "length": x/1000, "mesure": rail.mesure}, scraps))
-
-            product_scraps = cadre_scraps + ouvrant_scraps + parclose_scraps + chicane_scraps + rail_scraps
-
-        if product_code == 202:
-            cadre = RawProduct.objects.get(code=103)
-            ouvrant = RawProduct.objects.get(code=104)
-            parclose = RawProduct.objects.get(code=514)
-
-            cadre_bars = [height, width] * 2 * quantity
-            scraps = []
-            bar = 6000
-            self.scraps_list(cadre_bars, scraps, bar)
-            cadre_scraps = list(map(lambda x: {"code": cadre.code, "label": cadre.label, "length": x/1000, "mesure": cadre.mesure}, scraps))
-
-            ouvrant_bars = [height, width / 2] * 4 * quantity
-            scraps = []
-            bar = 6000
-            self.scraps_list(ouvrant_bars, scraps, bar)
-            ouvrant_scraps = list(map(lambda x: {"code": ouvrant.code, "label": ouvrant.label, "length": x/1000, "mesure": ouvrant.mesure}, scraps))
-
-            parclose_bars = [height, width / 2] * 4 * quantity
-            scraps = []
-            bar = 6000
-            self.scraps_list(parclose_bars, scraps, bar)
-            parclose_scraps = list(map(lambda x: {"code": parclose.code, "label": parclose.label, "length": x/1000, "mesure": parclose.mesure}, scraps))
-
-            product_scraps = cadre_scraps + ouvrant_scraps + parclose_scraps
-
-        if volet_roulant:
-            if product_code != 201:
-                traverse = RawProduct.objects.get(code=107)
-
-                traverse_bars = [width] * quantity
-                scraps = []
-                bar = 6000
-                self.scraps_list(traverse_bars, scraps, bar)
-                traverse_scraps = list(map(lambda x: {"code": traverse.code, "label": traverse.label, "length": x/1000, "mesure": traverse.mesure}, scraps))
-
-                product_scraps.extend(traverse_scraps)
-
-        return Response(product_scraps, status=status.HTTP_200_OK)
+        return Response(scraps, status=status.HTTP_200_OK) 

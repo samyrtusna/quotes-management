@@ -4,11 +4,14 @@ import { useNavigate } from "react-router-dom";
 import authService from "../service/authService";
 import CustomForm from "./communs/CustomForm";
 import { setLogin } from "../features/authSlices";
+import { Box, CircularProgress } from "@mui/material";
 
-const Login = () => {
+const Login = (props) => {
+  const { darkMode } = props;
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [isEmpty, setIsEmpty] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { user, token } = useSelector((state) => state.Auth);
@@ -33,17 +36,10 @@ const Login = () => {
       dispatch(setLogin(response.data));
       navigate("/");
     } catch (error) {
-      setError(error.message);
+      console.log(error.message);
+      setErrorMessage("Invalid Credentials");
     }
   };
-
-  if (!user && !error) {
-    return (
-      <Box sx={{ display: "flex" }}>
-        <CircularProgress />
-      </Box>
-    );
-  }
 
   const fields = [
     { name: "username", label: "Username", value: username, type: "text" },
@@ -55,15 +51,25 @@ const Login = () => {
     },
   ];
 
+  useEffect(() => {
+    if (username && password) {
+      setIsEmpty(false);
+    } else {
+      setIsEmpty(true);
+    }
+  }, [username, password]);
+
   return (
     <CustomForm
       title="Log in"
       fields={fields}
       handleChange={handleChange}
       handleSubmit={handleLogin}
-      errorMessage={error}
+      errorMessage={errorMessage}
+      darkMode={darkMode}
+      isEmpty={isEmpty}
     >
-      Log in
+      Sign In
     </CustomForm>
   );
 };

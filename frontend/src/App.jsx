@@ -20,6 +20,7 @@ import { CssBaseline } from "@mui/material";
 import Scraps from "./components/Scraps";
 
 function App() {
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
   const theme = useMemo(
     () =>
@@ -39,17 +40,18 @@ function App() {
           <Navbar
             darkMode={darkMode}
             setDarkMode={setDarkMode}
+            drawerOpen={drawerOpen}
           />
           <Routes>
             <Route
               path="/"
-              element={<HomePage />}
+              element={<HomePage darkMode={darkMode} />}
             />
             <Route
               path="/productsFamilly"
               element={
                 <ProtectedRoutes>
-                  <ProductsFamilly />
+                  <ProductsFamilly darkMode={darkMode} />
                 </ProtectedRoutes>
               }
             />
@@ -57,7 +59,7 @@ function App() {
               path="/productsFamillyform/:id"
               element={
                 <ProtectedRoutes>
-                  <ProductsFamillyForm />
+                  <ProductsFamillyForm darkMode={darkMode} />
                 </ProtectedRoutes>
               }
             />
@@ -65,7 +67,7 @@ function App() {
               path="/rawProducts"
               element={
                 <ProtectedRoutes>
-                  <RawProduct />
+                  <RawProduct darkMode={darkMode} />
                 </ProtectedRoutes>
               }
             />
@@ -73,7 +75,7 @@ function App() {
               path="/RawProductForm/:id"
               element={
                 <ProtectedRoutes>
-                  <RawProductForm />
+                  <RawProductForm darkMode={darkMode} />
                 </ProtectedRoutes>
               }
             />
@@ -81,7 +83,7 @@ function App() {
               path="/products"
               element={
                 <ProtectedRoutes>
-                  <Products />
+                  <Products darkMode={darkMode} />
                 </ProtectedRoutes>
               }
             />
@@ -89,7 +91,7 @@ function App() {
               path="/productsform/:id"
               element={
                 <ProtectedRoutes>
-                  <ProductForm />
+                  <ProductForm darkMode={darkMode} />
                 </ProtectedRoutes>
               }
             />
@@ -97,7 +99,7 @@ function App() {
               path="/quotes"
               element={
                 <ProtectedRoutes>
-                  <Quotes />
+                  <Quotes darkMode={darkMode} />
                 </ProtectedRoutes>
               }
             />
@@ -105,7 +107,11 @@ function App() {
               path="/quoteDetails/:id"
               element={
                 <ProtectedRoutes>
-                  <QuoteDetails />
+                  <QuoteDetails
+                    drawerOpen={drawerOpen}
+                    setDrawerOpen={setDrawerOpen}
+                    darkMode={darkMode}
+                  />
                 </ProtectedRoutes>
               }
             />
@@ -113,23 +119,23 @@ function App() {
               path="/quoteForm/:id"
               element={
                 <ProtectedRoutes>
-                  <QuoteForm />
+                  <QuoteForm darkMode={darkMode} />
                 </ProtectedRoutes>
               }
             />
             <Route
               path="/signup"
-              element={<Signup />}
+              element={<Signup darkMode={darkMode} />}
             />
             <Route
               path="/login"
-              element={<Login />}
+              element={<Login darkMode={darkMode} />}
             />
             <Route
               path="/scraps"
               element={
                 <ProtectedRoutes>
-                  <Scraps />
+                  <Scraps darkMode={darkMode} />
                 </ProtectedRoutes>
               }
             />

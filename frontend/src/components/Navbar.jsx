@@ -14,11 +14,12 @@ import MenuItem from "@mui/material/MenuItem";
 import HomeIcon from "@mui/icons-material/Home";
 import LightModeIcon from "@mui/icons-material/LightMode";
 import DarkModeIcon from "@mui/icons-material/DarkMode";
+import PersonIcon from "@mui/icons-material/Person";
 import { useDispatch, useSelector } from "react-redux";
 import { setLogout } from "../features/authSlices";
 import authService from "../service/authService";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const pages = [
   { name: "Raw Products", route: "RawProducts" },
@@ -27,10 +28,10 @@ const pages = [
   { name: "Quotes", route: "Quotes" },
   { name: "Scraps", route: "Scraps" },
 ];
-
 const settings = ["Signup", "Login", "Logout"];
 
-function Navbar({ darkMode, setDarkMode }) {
+function Navbar(props) {
+  const { darkMode, setDarkMode, drawerOpen } = props;
   const navigate = useNavigate();
   const [anchorElNav, setAnchorElNav] = useState(null);
   const [anchorElUser, setAnchorElUser] = useState(null);
@@ -41,6 +42,14 @@ function Navbar({ darkMode, setDarkMode }) {
   const handleThemeChange = () => {
     setDarkMode(!darkMode);
   };
+
+  useEffect(() => {
+    if (darkMode) {
+      document.body.classList.add("dark-mode");
+    } else {
+      document.body.classList.remove("dark-mode");
+    }
+  }, [darkMode]);
 
   const handleLogout = async () => {
     console.log("Token : ", token);
@@ -87,7 +96,21 @@ function Navbar({ darkMode, setDarkMode }) {
       : "";
 
   return (
-    <AppBar position="static">
+    <AppBar
+      position="sticky"
+      elevation={0}
+      sx={{
+        width: { lg: "60%", md: "80%", sm: "100%" },
+        marginLeft: drawerOpen ? "300px" : { lg: "20%", md: "10%" },
+        transition: "width 0.3s, margin 0.3s",
+        backgroundImage: darkMode
+          ? 'url("/images/dark_Bg02.jpg")'
+          : 'url("/images/background_01.jpg")',
+        marginTop: "40px",
+        height: "50px",
+        borderRadius: "10px",
+      }}
+    >
       <Container maxWidth="xl">
         <Toolbar disableGutters>
           <HomeIcon
@@ -96,19 +119,27 @@ function Navbar({ darkMode, setDarkMode }) {
               display: { xs: "none", md: "flex" },
               mr: 1,
               cursor: "pointer",
+              color: darkMode ? "#ffffff" : "GrayText",
             }}
           />
 
-          <Box sx={{ flexGrow: 1, display: { xs: "flex", md: "none" } }}>
+          <Box
+            sx={{
+              flexGrow: 1,
+              display: {
+                xs: "flex",
+                sm: "none",
+              },
+            }}
+          >
             <IconButton
               size="large"
               aria-label="account of current user"
               aria-controls="menu-appbar"
               aria-haspopup="true"
               onClick={handleOpenNavMenu}
-              color="inherit"
             >
-              <MenuIcon />
+              <MenuIcon sx={{ color: darkMode ? "#ffffff" : "GrayText" }} />
             </IconButton>
             <Menu
               id="menu-appbar"
@@ -125,15 +156,22 @@ function Navbar({ darkMode, setDarkMode }) {
               open={Boolean(anchorElNav)}
               onClose={handleCloseNavMenu}
               sx={{
-                display: { xs: "block", md: "none" },
+                display: {
+                  xs: "block",
+                  sm: "none",
+                },
               }}
             >
               {pages.map((page) => (
                 <MenuItem
                   key={page.route}
                   onClick={handleCloseNavMenu}
+                  sx={{ bgcolor: "inherit" }}
                 >
-                  <Typography textAlign="center">
+                  <Typography
+                    textAlign="center"
+                    sx={{ color: darkMode ? "#ffffff" : "GrayText" }}
+                  >
                     <Link
                       to={`/${page.route}`}
                       style={{ textDecoration: "none", color: "inherit" }}
@@ -152,17 +190,28 @@ function Navbar({ darkMode, setDarkMode }) {
               display: { xs: "flex", md: "none" },
               mr: 1,
               cursor: "pointer",
+              color: darkMode ? "#ffffff" : "GrayText",
             }}
           />
 
-          <Box sx={{ flexGrow: 1, display: { xs: "none", md: "flex" } }}>
+          <Box
+            sx={{
+              flexGrow: 1,
+              display: { xs: "none", sm: "flex" },
+            }}
+          >
             {pages.map((page) => (
               <Button
                 key={page.route}
                 component={Link}
                 to={`/${page.route}`}
                 onClick={handleCloseNavMenu}
-                sx={{ my: 2, color: "white", display: "block" }}
+                sx={{
+                  my: 2,
+                  color: darkMode ? "#ffffff" : "GrayText",
+                  display: "block",
+                  textTransform: "none",
+                }}
               >
                 {page.name}
               </Button>
@@ -172,26 +221,71 @@ function Navbar({ darkMode, setDarkMode }) {
             onClick={handleThemeChange}
             color="inherit"
           >
-            {darkMode ? <LightModeIcon /> : <DarkModeIcon />}
+            {darkMode ? (
+              <LightModeIcon sx={{ color: "#ffffff" }} />
+            ) : (
+              <DarkModeIcon sx={{ color: "GrayText" }} />
+            )}
           </IconButton>
           <Box sx={{ flexGrow: 0 }}>
             {token ? (
-              <Tooltip title="User Menu">
-                <IconButton
-                  onClick={handleOpenUserMenu}
-                  sx={{ p: 0 }}
+              <Box>
+                <Tooltip title="User Menu">
+                  <IconButton
+                    onClick={handleOpenUserMenu}
+                    sx={{ p: 0 }}
+                  >
+                    <Avatar
+                      sx={{
+                        bgcolor: darkMode ? "#5e6b6b" : "#26b7f0",
+                        color: "#ffffff",
+                        "&:hover": {
+                          bgcolor: darkMode ? "#3a4242" : "primary.main",
+                        },
+                      }}
+                    >
+                      {avatarLetter}
+                    </Avatar>
+                  </IconButton>
+                </Tooltip>
+                <Menu
+                  sx={{ mt: "45px" }}
+                  id="menu-appbar"
+                  anchorEl={anchorElUser}
+                  anchorOrigin={{
+                    vertical: "top",
+                    horizontal: "right",
+                  }}
+                  keepMounted
+                  transformOrigin={{
+                    vertical: "top",
+                    horizontal: "right",
+                  }}
+                  open={Boolean(anchorElUser)}
+                  onClose={handleCloseUserMenu}
                 >
-                  <Avatar sx={{ bgcolor: "orange" }}>{avatarLetter}</Avatar>
-                </IconButton>
-              </Tooltip>
+                  <MenuItem
+                    key="logout"
+                    onClick={() => handleUserMenuClick("Logout")}
+                    sx={{ height: "20px" }}
+                  >
+                    <Typography
+                      textAlign="center"
+                      sx={{ color: "GrayText" }}
+                    >
+                      logout
+                    </Typography>
+                  </MenuItem>
+                </Menu>
+              </Box>
             ) : (
               <Box>
                 <Button
                   onClick={handleOpenUserMenu}
                   variant="text"
-                  color="inherit"
+                  sx={{ color: "GrayText" }}
                 >
-                  Login
+                  <PersonIcon fontSize="large" />
                 </Button>
                 <Menu
                   sx={{ mt: "45px" }}
@@ -210,10 +304,20 @@ function Navbar({ darkMode, setDarkMode }) {
                   onClose={handleCloseUserMenu}
                 >
                   <MenuItem onClick={() => handleUserMenuClick("Login")}>
-                    <Typography textAlign="center">Login</Typography>
+                    <Typography
+                      textAlign="center"
+                      sx={{ color: "GrayText" }}
+                    >
+                      Login
+                    </Typography>
                   </MenuItem>
                   <MenuItem onClick={() => handleUserMenuClick("Signup")}>
-                    <Typography textAlign="center">Signup</Typography>
+                    <Typography
+                      textAlign="center"
+                      sx={{ color: "GrayText" }}
+                    >
+                      Signup
+                    </Typography>
                   </MenuItem>
                 </Menu>
               </Box>

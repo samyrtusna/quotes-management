@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from .models import Quote, QuoteDetails
 from products.models import Product
-from rawProducts.serializers import RawProductsConsumedSerializers
+from rawProducts.serializers import RawProductsConsumedSerializers 
 
 class QuoteDetailsSerializer(serializers.ModelSerializer):
     product = serializers.PrimaryKeyRelatedField(queryset=Product.objects.all())
@@ -26,7 +26,7 @@ class QuoteDetailsSerializer(serializers.ModelSerializer):
     #     fields['raws_consumed'] = RawProductsConsumedSerializers(many=True, source='rawproductsconsumed_set')
     #     return fields
     
-class CreateQuoteDetailsSerializer(serializers.ModelSerializer):
+class CreateQuoteDetailsSerializer(serializers.ModelSerializer): 
 
     def create(self, validated_data):
         validated_data["owner"] = self.context["request"].user
@@ -44,7 +44,7 @@ class QuoteSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Quote
-        fields = ["id","owner", "reference", "client_name", "date", "amount", "details","status"]
+        fields = ["id","owner", "reference", "client_name", "date", "amount", "status", "details"]
 
         
 

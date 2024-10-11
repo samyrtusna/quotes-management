@@ -32,9 +32,7 @@ class RawProductsConsumedSerializers(serializers.ModelSerializer):
         representation['quote_details'] = ProductSerializer(instance.quote_details.product).data if instance.quote_details else None
         return representation
     
-    def create(self, validated_data):
-        validated_data["owner"] = self.context["request"].user
-        return super().create(validated_data)
+    
 
     class Meta:
         model = RawProductsConsumed

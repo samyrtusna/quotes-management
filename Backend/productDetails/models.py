@@ -8,3 +8,4 @@ class ProductDetails(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, null=True)
     raw_product = models.ForeignKey(RawProduct, on_delete=models.CASCADE, null=True)
     formula = models.TextField()
+    slices_quantity = models.IntegerField(default=1)

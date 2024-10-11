@@ -7,13 +7,16 @@ const detailQuote = (id) => {
   return http.get(`/quotes/quotes/${id}/`);
 };
 const createQuote = (newObject) => {
-  return http.get(`/quotes/quotes/save_quote/`, newObject);
+  return http.post(`/quotes/quotes/save_quote/`, newObject);
 };
 const updateQuote = (id, newObject) => {
-  return http.get(`/quotes/quotes/${id}/`, newObject);
+  return http.put(`/quotes/quotes/${id}/`, newObject);
+};
+const patchQuote = (id, newObject) => {
+  return http.patch(`/quotes/quotes/${id}/`, newObject);
 };
 const deleteQuote = (id) => {
-  return http.get(`/quotes/quotes/${id}/`);
+  return http.delete(`/quotes/quotes/${id}/`);
 };
 
 export default {
@@ -21,5 +24,6 @@ export default {
   detail: detailQuote,
   create: createQuote,
   update: updateQuote,
+  patch: patchQuote,
   delete: deleteQuote,
 };

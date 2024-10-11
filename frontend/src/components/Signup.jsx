@@ -1,17 +1,19 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import authService from "../service/authService";
 import { setLogin } from "../features/authSlices";
 import { useNavigate } from "react-router-dom";
 import CustomForm from "./communs/CustomForm";
 
-const Signup = () => {
+const Signup = (props) => {
+  const { darkMode } = props;
   const [first_name, setFirst_name] = useState("");
   const [last_name, setLast_name] = useState("");
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [isEmpty, setIsEmpty] = useState(true);
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
@@ -65,6 +67,14 @@ const Signup = () => {
     }
   };
 
+  useEffect(() => {
+    if (first_name && last_name && email && username && password) {
+      setIsEmpty(false);
+    } else {
+      setIsEmpty(true);
+    }
+  }, [first_name, last_name, email, username, password]);
+
   const fields = [
     {
       name: "first_name",
@@ -89,6 +99,8 @@ const Signup = () => {
       handleChange={handleChange}
       handleSubmit={handleSignup}
       errorMessage={errorMessage}
+      darkMode={darkMode}
+      isEmpty={isEmpty}
     >
       Sign Up
     </CustomForm>

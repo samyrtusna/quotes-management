@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 
 
 class Quote(models.Model):
-    owner = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, null=True)  
     reference = models.CharField(max_length=50)
     client_name = models.CharField(("client name"), max_length=50)
     date = models.DateField(auto_now=False, auto_now_add=True)

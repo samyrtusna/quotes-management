@@ -3,7 +3,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 
 function Title(props) {
-  const { title, customForm, addButton, children } = props;
+  const { title, customForm, addButton, children, darkMode } = props;
   const navigate = useNavigate();
 
   const handleAddButton = (id = "new") => {
@@ -26,6 +26,12 @@ function Title(props) {
         </Typography>
         {addButton === "yes" && (
           <Button
+            sx={{
+              marginRight: 2,
+              bgcolor: darkMode ? "#5e6b6b" : "#26b7f0",
+              color: darkMode ? "#ffffff" : "#000000",
+              "&:hover": { bgcolor: darkMode && "#3a4242" },
+            }}
             variant="contained"
             onClick={() => handleAddButton()}
           >

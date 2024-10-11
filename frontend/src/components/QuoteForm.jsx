@@ -18,30 +18,35 @@ import {
   InputBase,
   Snackbar,
   Alert,
+  useTheme,
 } from "@mui/material";
 import axios from "axios";
 import ProductService from "../service/ProductService";
+import { setProducts } from "../features/productSlices";
 import FormatMoney from "../utils/MoneyFormat";
+import { useDispatch, useSelector } from "react-redux";
 
-function QuoteForm() {
+function QuoteForm(props) {
+  const { darkMode } = props;
   const [clientName, setClientName] = useState("");
-  const [productsList, setProductsList] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [height, setHeight] = useState("");
   const [width, setWidth] = useState("");
   const [quantity, setQuantity] = useState("");
-  const [products, setProducts] = useState([]);
+  const [quoteItems, setQuoteItems] = useState([]);
   const [totalAmount, setTotalAmount] = useState(0);
   const [rawProductsConsumed, setRawProductsConsumed] = useState([]);
-  const [productScraps, setProductScraps] = useState([]);
   const [successMessage, setSuccessMessage] = useState(false);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const theme = useTheme();
+
+  const { Products } = useSelector((state) => state.Products);
 
   const fetchProducts = async () => {
     try {
       const response = await ProductService.getAll();
-      setProductsList(response.data);
-      console.log("products list : ", response.data);
+      dispatch(setProducts(response.data));
     } catch (error) {
       console.error("Error fetching products", error);
     }
@@ -51,9 +56,9 @@ function QuoteForm() {
     fetchProducts();
   }, []);
 
-  const handleProductSubmit = async () => {
-    const productData = {
-      index: products.length + 1,
+  const handleItemSubmit = async () => {
+    const itemData = {
+      index: quoteItems.length + 1,
       product: selectedProduct.label,
       code: selectedProduct.code,
       height,
@@ -64,15 +69,14 @@ function QuoteForm() {
     try {
       const response = await axios.post(
         `http://127.0.0.1:8000/quotes/quotes/calculate_product_amount/`,
-        productData
+        itemData
       );
-      console.log("calculate product amount response : ", response.data);
-      const newProduct = {
-        ...productData,
+      const newItem = {
+        ...itemData,
         amount: response.data.amount,
       };
 
-      setProducts([...products, newProduct]);
+      setQuoteItems([...quoteItems, newItem]);
       setTotalAmount(totalAmount + response.data.amount);
 
       setRawProductsConsumed([
@@ -86,16 +90,6 @@ function QuoteForm() {
     } catch (error) {
       console.error("Error calculating product amount", error);
     }
-    //   try {
-    //     const scrapsResponse = await axios.post(
-    //       `http://127.0.0.1:8000/scraps/scraps/calculate_scraps_bars/`,
-    //       productData
-    //     );
-    //     console.log("scraps bars response : ", scrapsResponse.data);
-    //     setProductScraps([...productScraps, ...scrapsResponse.data]);
-    //   } catch (error) {
-    //     console.error("Error calculating scraps bars", error);
-    //   }
   };
 
   const handleQuoteSubmit = async () => {
@@ -114,27 +108,23 @@ function QuoteForm() {
       const quoteId = response.data.id;
 
       await Promise.all(
-        products.map(async (product) => {
-          const productData = {
-            ...product,
-            product: productsList.find((p) => p.label === product.product).id,
+        quoteItems.map(async (item) => {
+          const itemData = {
+            ...item,
+            product: Products.find((p) => p.label === item.product).id,
             quote: quoteId,
           };
-          const productResponse = await axios.post(
+          const itemResponse = await axios.post(
             `http://127.0.0.1:8000/quotes/quote_details/`,
-            productData
+            itemData
           );
-          console.log("save quote details response : ", productResponse.data);
-
-          const quoteDetailId = productResponse.data.id;
+          const quoteDetailId = itemResponse.data.id;
 
           const relatedRawProducts = rawProductsConsumed
-            .filter((raw) => raw.index === product.index)
+            .filter((raw) => raw.index === item.index)
             .map(({ index, ...rest }) => ({
               ...rest,
             }));
-
-          console.log("related raw products : ", relatedRawProducts);
 
           await Promise.all(
             relatedRawProducts.map(async (raw) => {
@@ -142,10 +132,6 @@ function QuoteForm() {
                 ...raw,
                 quote_details: quoteDetailId,
               };
-              console.log(
-                "raw product consumed object : ",
-                rawProductsConsumedObject
-              );
               await axios.post(
                 `http://127.0.0.1:8000/raw_products/raws_consumed/`,
                 rawProductsConsumedObject
@@ -154,11 +140,20 @@ function QuoteForm() {
           );
         })
       );
-      // await Promise.all(
-      //   productScraps.map(async (obj) => {
-      //     await axios.post(`http://127.0.0.1:8000/scraps/scraps/`, obj);
-      //   })
-      // );
+      try {
+        const scrapsResponse = await axios.post(
+          `http://127.0.0.1:8000/scraps/scraps/calculate_scraps_bars/`,
+          quoteItems
+        );
+        console.log("scraps bars response : ", scrapsResponse.data);
+        await Promise.all(
+          scrapsResponse.data.map(async (obj) => {
+            await axios.post(`http://127.0.0.1:8000/scraps/scraps/`, obj);
+          })
+        );
+      } catch (error) {
+        console.error("Error calculating scraps bars", error);
+      }
 
       setSuccessMessage(true);
       setTimeout(() => {
@@ -209,14 +204,20 @@ function QuoteForm() {
       </Grid>
 
       <Box sx={{ display: "flex", justifyContent: "center", marginTop: 8 }}>
-        <Paper sx={{ width: "80%", padding: 2 }}>
-          <TableContainer component={Paper}>
+        <Paper
+          sx={{ width: "80%", padding: 2, bgcolor: !darkMode && "inherit" }}
+        >
+          <TableContainer
+            component={Paper}
+            sx={{ backgroundColor: "inherit" }}
+            elevation={3}
+          >
             <Table
               sx={{ minWidth: 650 }}
               aria-label="custom table"
             >
               <TableHead>
-                <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
+                <TableRow>
                   {columns.map((column) => (
                     <TableCell
                       key={column.field}
@@ -225,6 +226,8 @@ function QuoteForm() {
                         fontSize: 20,
                         fontWeight: "bold",
                         width: column.field === "product" ? "50%" : "10%",
+                        color: theme.palette.text.primary,
+                        bgcolor: !darkMode && "#acd0dc",
                       }}
                     >
                       {column.headerName}
@@ -233,14 +236,16 @@ function QuoteForm() {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {products.map((product, index) => (
+                {quoteItems.map((item, index) => (
                   <TableRow key={index}>
                     {columns.map((column) => (
                       <TableCell
                         key={column.field}
                         align={column.align}
                       >
-                        {FormatMoney(product[column.field])}
+                        {column.field === "amount"
+                          ? FormatMoney(item[column.field])
+                          : item[column.field]}
                       </TableCell>
                     ))}
                   </TableRow>
@@ -251,7 +256,7 @@ function QuoteForm() {
                       value={selectedProduct ? selectedProduct.label : ""}
                       onChange={(e) =>
                         setSelectedProduct(
-                          productsList.find(
+                          Products.find(
                             (product) => product.label === e.target.value
                           )
                         )
@@ -263,7 +268,7 @@ function QuoteForm() {
                       <MenuItem value="">
                         <em>Select Product</em>
                       </MenuItem>
-                      {productsList.map((product) => (
+                      {Products.map((product) => (
                         <MenuItem
                           key={product.id}
                           value={product.label}
@@ -277,7 +282,9 @@ function QuoteForm() {
                     <TextField
                       variant="standard"
                       value={height}
-                      onChange={(e) => setHeight(e.target.value)}
+                      onChange={(e) =>
+                        !isNaN(e.target.value) && setHeight(e.target.value)
+                      }
                       InputProps={{ disableUnderline: true }}
                       placeholder="Height"
                     />
@@ -286,7 +293,9 @@ function QuoteForm() {
                     <TextField
                       variant="standard"
                       value={width}
-                      onChange={(e) => setWidth(e.target.value)}
+                      onChange={(e) =>
+                        !isNaN(e.target.value) && setWidth(e.target.value)
+                      }
                       InputProps={{ disableUnderline: true }}
                       placeholder="Width"
                     />
@@ -295,13 +304,22 @@ function QuoteForm() {
                     <TextField
                       variant="standard"
                       value={quantity}
-                      onChange={(e) => setQuantity(e.target.value)}
+                      onChange={(e) =>
+                        !isNaN(e.target.value) && setQuantity(e.target.value)
+                      }
                       InputProps={{ disableUnderline: true }}
                       placeholder="Quantity"
                     />
                   </TableCell>
                   <TableCell>
-                    <Button onClick={handleProductSubmit}>Add</Button>
+                    <Button
+                      onClick={handleItemSubmit}
+                      disabled={
+                        !(selectedProduct && height && width && quantity)
+                      }
+                    >
+                      Add
+                    </Button>
                   </TableCell>
                 </TableRow>
               </TableBody>
@@ -327,7 +345,13 @@ function QuoteForm() {
           <Button
             variant="contained"
             onClick={handleQuoteSubmit}
-            sx={{ marginTop: 2 }}
+            sx={{
+              marginTop: 2,
+              bgcolor: darkMode ? "#5e6b6b" : "#26b7f0",
+              color: darkMode ? "#ffffff" : "#000000",
+              "&:hover": { bgcolor: darkMode && "#3a4242" },
+            }}
+            disabled={!(clientName && quoteItems.length !== 0)}
           >
             Save
           </Button>

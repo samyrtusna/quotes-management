@@ -5,7 +5,8 @@ import { setScraps } from "../features/scrapSlices";
 import Title from "./communs/Title";
 import CustomTable from "./communs/CostumTable";
 
-function Scraps() {
+function Scraps(props) {
+  const { darkMode } = props;
   const { Scraps } = useSelector((state) => state.Scraps);
   const dispatch = useDispatch();
   const [error, setError] = useState("");
@@ -52,6 +53,7 @@ function Scraps() {
         columns={columns}
         data={sortedScraps}
         pointerField="label"
+        darkMode={darkMode}
       />
     </>
   );

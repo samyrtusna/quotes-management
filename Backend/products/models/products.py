@@ -10,7 +10,6 @@ class Product(models.Model):
     label = models.CharField(max_length=60)
     familly = models.ForeignKey(ProductFamilly, on_delete=models.CASCADE, null=True)
     color = models.CharField(max_length=50, default="blanc")
-    type = models.CharField(max_length=50, blank=True)
 
     def __str__(self):
         return self.label

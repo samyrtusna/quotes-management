@@ -1,5 +1,7 @@
 from rest_framework import viewsets
 from authentication.permissions import UserPermission
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.exceptions import NotAuthenticated
 from .models import Product
 from .serializers import ProductSerializer, CreateProductSerializer
 
@@ -10,6 +12,8 @@ class ProductViewSet(viewsets.ModelViewSet):
     
     
     def get_queryset(self): 
+        if not self.request.user.is_authenticated:
+            raise NotAuthenticated('You are not authenticated')
         if self.request.user.is_superuser:
             return Product.objects.all()
         return Product.objects.filter(owner=self.request.user)

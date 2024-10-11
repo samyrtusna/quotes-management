@@ -6,8 +6,10 @@ import Title from "./communs/Title";
 import CustomTable from "./communs/CostumTable";
 import { Link } from "react-router-dom";
 import FormatMoney from "../utils/MoneyFormat";
+import { Typography } from "@mui/material";
 
-function Quotes() {
+function Quotes(props) {
+  const { darkMode } = props;
   const { quotes } = useSelector((state) => state.Quotes);
   const dispatch = useDispatch();
   const [error, setError] = useState("");
@@ -34,6 +36,19 @@ function Quotes() {
   }
   if (error) return <p>Error: {error}</p>;
 
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "pending":
+        return "primary.main";
+      case "approved":
+        return "success.main";
+      case "rejected":
+        return "error.main";
+      default:
+        return "text.primary";
+    }
+  };
+
   const columns = [
     { field: "reference", headerName: "Reference", align: "left" },
     {
@@ -56,6 +71,21 @@ function Quotes() {
       align: "right",
       renderCell: (params) => FormatMoney(params.value),
     },
+    {
+      field: "status",
+      headerName: "Status",
+      align: "right",
+      renderCell: (params) => (
+        <Typography
+          variant="body2"
+          sx={{
+            color: getStatusColor(params.value),
+          }}
+        >
+          {params.value}
+        </Typography>
+      ),
+    },
   ];
 
   return (
@@ -64,6 +94,7 @@ function Quotes() {
         title="Quotes"
         customForm="QuoteForm"
         addButton="yes"
+        darkMode={darkMode}
       >
         Add Quote
       </Title>
@@ -73,7 +104,7 @@ function Quotes() {
         data={Array.isArray(quotes) ? quotes : []}
         customForm="QuoteDetails"
         pointerField="client_name"
-        superuser="yes"
+        darkMode={darkMode}
       />
     </>
   );

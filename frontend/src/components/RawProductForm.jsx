@@ -3,7 +3,8 @@ import RawService from "../service/RawService";
 import { useNavigate, useParams } from "react-router-dom";
 import CustomForm from "./communs/CustomForm";
 
-function RawProductForm() {
+function RawProductForm(props) {
+  const { darkMode } = props;
   const navigate = useNavigate();
   const { id } = useParams();
   const inputRef = useRef();
@@ -12,21 +13,27 @@ function RawProductForm() {
   const [price, setPrice] = useState("");
   const [length, setLength] = useState("");
   const [mesure, setMesure] = useState("");
-  const [addButton, setAddButton] = useState("no");
+  const [isEmpty, setIsEmpty] = useState(true);
 
   const handleChange = (name, value) => {
     switch (name) {
       case "code":
-        setCode(value);
+        if (!isNaN(value)) {
+          setCode(value);
+        }
         break;
       case "label":
         setLabel(value);
         break;
       case "price":
-        setPrice(value);
+        if (!isNaN(value)) {
+          setPrice(value);
+        }
         break;
       case "length":
-        setLength(value);
+        if (!isNaN(value)) {
+          setLength(value);
+        }
         break;
       case "mesure":
         setMesure(value);
@@ -55,6 +62,14 @@ function RawProductForm() {
     }
     inputRef.current.focus();
   }, [id]);
+
+  useEffect(() => {
+    if (code && label && price && length && mesure) {
+      setIsEmpty(false);
+    } else {
+      setIsEmpty(true);
+    }
+  }, [code, label, price, length, mesure]);
 
   const addRawProduct = async () => {
     const newRawProduct = { code, label, price, length, mesure };
@@ -98,7 +113,12 @@ function RawProductForm() {
     { name: "code", label: "Code", value: code, type: "text" },
     { name: "label", label: "Label", value: label, type: "text" },
     { name: "price", label: "Price", value: price, type: "text" },
-    { name: "length", label: "Length", value: length, type: "text" },
+    {
+      name: "length",
+      label: "Length",
+      value: length,
+      type: "text",
+    },
     {
       name: "mesure",
       label: "Mesure",
@@ -122,6 +142,9 @@ function RawProductForm() {
       isEditMode={id !== "new"}
       inputRef={inputRef}
       addButton="yes"
+      elementToDelete="Raw Product"
+      darkMode={darkMode}
+      isEmpty={isEmpty}
     >
       {" "}
       Add{" "}

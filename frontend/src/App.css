@@ -1,0 +1,17 @@
+body {
+  background-image: url("/images/background_01.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: repeat-y;
+  height: 100vh;
+  margin: 0;
+}
+
+body.dark-mode {
+  background-image: url("/images/dark_Bg02.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: repeat-y;
+  height: 100vh;
+  margin: 0;
+}
