@@ -1,14 +1,15 @@
 from django.db import models
+from abstract.models import AbstractModel
 from productsFamilly.models import ProductFamilly
 from django.contrib.auth.models import User
 
 
-class Product(models.Model):
+class Product(AbstractModel):
 
     owner = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
     code = models.IntegerField(default=0)
     label = models.CharField(max_length=60)
-    familly = models.ForeignKey(ProductFamilly, on_delete=models.CASCADE, null=True)
+    familly = models.ForeignKey(ProductFamilly, on_delete=models.SET_NULL, null=True)
     color = models.CharField(max_length=50, default="blanc")
 
     def __str__(self):

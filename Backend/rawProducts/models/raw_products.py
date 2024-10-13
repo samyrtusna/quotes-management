@@ -1,8 +1,9 @@
 from django.db import models
+from abstract.models import AbstractModel
 from django.contrib.auth.models import User
 
 
-class RawProduct(models.Model):
+class RawProduct(AbstractModel):
 
     owner = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
     code = models.IntegerField()

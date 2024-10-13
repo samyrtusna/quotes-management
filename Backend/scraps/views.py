@@ -30,6 +30,9 @@ class ScrapsViewset(viewsets.ModelViewSet):
             return CreateScrapsSerializer
         return ScrapsSerializer
     
+    def perform_destroy(self, instance):
+        instance.soft_delete()
+    
     def item_length(self,formula,H,W):
         try:
             allowed_chars = "0123456789+-*/().HW "

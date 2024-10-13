@@ -1,9 +1,10 @@
 from django.db import models
+from abstract.models import AbstractModel
 from django.utils import timezone
 from django.contrib.auth.models import User
 
 
-class Quote(models.Model):
+class Quote(AbstractModel):
     owner = models.ForeignKey(User, on_delete=models.CASCADE, null=True)  
     reference = models.CharField(max_length=50)
     client_name = models.CharField(("client name"), max_length=50)

@@ -22,3 +22,6 @@ class ProductDetailsViewSet(viewsets.ModelViewSet):
         if self.action in ["create", "update", "partial_update"]:
             return CreateProductDetailsSerializer
         return ProductDetailsSerializer
+    
+    def perform_destroy(self, instance):
+        instance.soft_delete()

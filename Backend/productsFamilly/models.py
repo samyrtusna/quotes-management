@@ -1,7 +1,8 @@
 from django.db import models
+from abstract.models import AbstractModel
 from django.contrib.auth.models import User
 
-class ProductFamilly(models.Model):
+class ProductFamilly(AbstractModel):
     
     owner = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
     code = models.IntegerField(default= 0)

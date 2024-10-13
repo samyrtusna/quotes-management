@@ -1,10 +1,11 @@
 from django.db import models
+from abstract.models import AbstractModel
 from products.models.products import Product
 from .quote import Quote
 from django.contrib.auth.models import User
 
 
-class QuoteDetails(models.Model):
+class QuoteDetails(AbstractModel):
 
     owner = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
     product = models.ForeignKey(Product, on_delete=models.CASCADE)

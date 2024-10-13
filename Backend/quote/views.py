@@ -31,6 +31,9 @@ class QuoteViewSet(viewsets.ModelViewSet):
         if self.action in ["create", "update"]:
             return CreateQuoteSerializer
         return QuoteSerializer
+    
+    def perform_destroy(self, instance):
+        instance.soft_delete()
 
     
     def raw_product_quantity(self,formula,H,W):
@@ -174,3 +177,6 @@ class QuoteDetailsViewSet(viewsets.ModelViewSet):
         if self.action in ["create", "update", "partial_update"]:
             return CreateQuoteDetailsSerializer
         return QuoteDetailsSerializer
+    
+    def perform_destroy(self, instance):
+        instance.soft_delete()

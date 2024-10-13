@@ -6,15 +6,11 @@ from productDetails.serializers import ProductDetailsSerializer
 
 
 class ProductSerializer(serializers.ModelSerializer):
-    familly = serializers.PrimaryKeyRelatedField(queryset=ProductFamilly.objects.all())
-    # retrieve related productDetails along with the product
-    details = ProductDetailsSerializer(many=True, read_only=True, source="productdetails_set") 
+    familly = serializers.SlugRelatedField(queryset=ProductFamilly.objects.all(), slug_field = "label")
+    details = ProductDetailsSerializer(many=True, read_only=True, source="productdetails_set") # retrieve related productDetails along with the product
 
 
-    def to_representation(self, instance):
-        representation = super().to_representation(instance)
-        representation['familly'] = instance.familly.label if instance.familly else None
-        return representation
+  
     
 
     class Meta:

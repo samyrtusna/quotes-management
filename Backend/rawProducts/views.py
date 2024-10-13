@@ -23,6 +23,9 @@ class RawProductViewSet(viewsets.ModelViewSet):
             return CreateRawProductSerializer
         return RawProductSerializer
     
+    def perform_destroy(self, instance):
+        instance.soft_delete()
+    
 
     
 
@@ -41,4 +44,7 @@ class RawProductsConsumedViewset(viewsets.ModelViewSet):
         if self.action in ["create", "update", "partial_update"]:
             return CreateRawProductsConsumedSerializers
         return RawProductsConsumedSerializers
+    
+    def perform_destroy(self, instance):
+        instance.soft_delete()
    
