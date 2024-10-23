@@ -21,7 +21,7 @@ class AbstractModel (models.Model):
 
     def restore(self):
         self.deleted_at = None
-        self.save()
+        self.save(update_fields=['deleted_at'])
 
     
     class Meta:

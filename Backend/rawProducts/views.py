@@ -15,7 +15,7 @@ class RawProductViewSet(viewsets.ModelViewSet):
         if not self.request.user.is_authenticated:
             raise NotAuthenticated('You are not authenticated')
         if self.request.user.is_superuser:
-            return RawProduct.objects.all()
+            return RawProduct.all_objects.all()
         return RawProduct.objects.filter(owner=self.request.user)
     
     def get_serializer_class(self):
@@ -25,6 +25,7 @@ class RawProductViewSet(viewsets.ModelViewSet):
     
     def perform_destroy(self, instance):
         instance.soft_delete()
+        print(f"Soft deleting instance: {instance}")
     
 
     

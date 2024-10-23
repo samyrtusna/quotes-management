@@ -393,6 +393,7 @@ function ProductForm(props) {
               onChange={(e) => setFormula(e.target.value)}
               onClick={handleFormulaFieldClick}
               fullWidth
+              inputProps={{ readOnly: true }}
             />
             {showCalculator && (
               <Popper

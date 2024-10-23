@@ -49,7 +49,7 @@ function CustomForm(props) {
           {title}
         </Typography>
       </Stack>
-      <Box sx={{ maxWidth: 400, margin: "0 auto", marginTop: 3 }}>
+      <Box sx={{ maxWidth: 400, margin: "0 auto", marginY: 3 }}>
         <Paper
           sx={{
             width: "100%",

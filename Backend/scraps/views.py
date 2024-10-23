@@ -1,4 +1,5 @@
 from collections import defaultdict
+import itertools
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import NotAuthenticated
@@ -47,23 +48,66 @@ class ScrapsViewset(viewsets.ModelViewSet):
             return str(e)
         
 
-    def scraps_list(self, item_bars,bar, length):
-        scraps = []
-       
-        while len(item_bars) > 0:
-            min_item = min(item_bars)
-            if min_item > bar:
-                scraps.append(bar)
-                bar = length
+    def scraps_list(self,lst, length):
+        scraps_list = []
+        while len(lst) > 0:
+            if sum(lst) <= length:
+                scrap = length - sum(lst)
+                scraps_list.append(scrap)
+                lst = []  
             else:
-                max_item = max([item for item in item_bars if item 
-                <= bar])
-                bar -= max_item
-                item_bars.remove(max_item)
-  
-        scraps.append(bar)
-        print(f"Final scraps: {scraps}")
-        return scraps
+                lst.sort()
+                print("sorted list =", lst)
+                ref = lst[-1]
+                print("reference length =", ref)
+                base_list = []
+
+                for i in lst[:-1]:
+                    if ref + i < length:
+                        base_list.append(i)
+                    elif ref + i == length:
+                        print("best combination", [ref, i])
+                        lst.remove(i)
+                        lst.remove(ref)
+                        break
+                    else:
+                        break
+
+                base_list.insert(0, ref)
+                print("base list =", base_list)
+
+                if sum(base_list) <= length:
+                    scrap = length - sum(base_list)
+                    scraps_list.append(scrap)
+                    for i in base_list:
+                        lst.remove(i)
+                else:
+                    leng = len(base_list)
+                    for n in range(1, leng):
+                        for i in range(1, leng - n + 1):
+                            if sum(base_list) - sum(base_list[i:i+n]) <= length:
+                                if base_list[i-2] and sum(base_list) - sum(base_list[i-2:i+(n-1)]) <= length  and sum(base_list[i-2:i+(n-1)]) < sum(base_list[i:i+n]):
+                                    for x in base_list[i-2:i+(n-1)]:
+                                        base_list.remove(x)
+                                    scrap = length - sum(base_list)
+                                    scraps_list.append(scrap)
+                                    for x in base_list:
+                                        lst.remove(x)
+                                    break
+                                else:
+                                    for x in base_list[i:i+n]:
+                                        base_list.remove(x)
+                                    scrap = length - sum(base_list)
+                                    scraps_list.append(scrap)
+                                    for x in base_list:
+                                        lst.remove(x)
+                                    break
+                        else:
+                            continue
+                        break
+
+        print("scraps list =", scraps_list)
+        return scraps_list
 
     @action(detail=False, methods=["POST"])
     def calculate_scraps_bars(self, request):
@@ -124,8 +168,7 @@ class ScrapsViewset(viewsets.ModelViewSet):
                     slice = {raw_product.code : int(slice_length)}
                     detail_slices=[slice for _ in range (detail.slices_quantity*quantity)]
                     bar_slices.append(detail_slices)
-        # print (bar_slices)
-        # print()
+       
 
 
         
@@ -136,19 +179,16 @@ class ScrapsViewset(viewsets.ModelViewSet):
                     grouped_slices[key].append(value)
 
         grouped_slices_list = list(grouped_slices.items())
-        print ("grouped slices list : ", grouped_slices_list)
 
         keys=0
       
         for key, values in grouped_slices_list:
             
             raw_products = RawProduct.objects.get(code=key, owner=user)
-            print("raw_product : ", raw_products.label)
-            length = raw_products.length * 1000
-            print("length : ", length)
+            length = (raw_products.length * 1000) - 50
             slices_list = values
             print("slices_list : ",list (slices_list))
-            scraps_list = self.scraps_list(slices_list, length, length)
+            scraps_list = self.scraps_list(slices_list, length)
 
             for item in scraps_list:
                 scrap= {"code" :  key, "label" : raw_products.label, "length" : item/1000, "mesure" : raw_products.mesure }

@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import RawService from "../service/RawService";
 import { useNavigate, useParams } from "react-router-dom";
 import CustomForm from "./communs/CustomForm";
+import { Box } from "@mui/material";
 
 function RawProductForm(props) {
   const { darkMode } = props;
@@ -133,22 +134,26 @@ function RawProductForm(props) {
   ];
 
   return (
-    <CustomForm
-      title={id === "new" ? "Add a New Raw Product" : "Edit Raw Product"}
-      fields={fields}
-      handleChange={handleChange}
-      handleSubmit={handleRawProductForm}
-      handleDelete={handleDelete}
-      isEditMode={id !== "new"}
-      inputRef={inputRef}
-      addButton="yes"
-      elementToDelete="Raw Product"
-      darkMode={darkMode}
-      isEmpty={isEmpty}
-    >
-      {" "}
-      Add{" "}
-    </CustomForm>
+    <Box>
+      <CustomForm
+        title={id === "new" ? "Add a New Raw Product" : "Edit Raw Product"}
+        fields={fields}
+        handleChange={handleChange}
+        handleSubmit={handleRawProductForm}
+        handleDelete={handleDelete}
+        isEditMode={id !== "new"}
+        inputRef={inputRef}
+        addButton="yes"
+        elementToDelete="Raw Product"
+        darkMode={darkMode}
+        isEmpty={isEmpty}
+      >
+        {" "}
+        Add{" "}
+      </CustomForm>
+      <br />
+      <br />
+    </Box>
   );
 }
 
