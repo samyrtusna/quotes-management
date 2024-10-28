@@ -48,10 +48,13 @@ class ScrapsViewset(viewsets.ModelViewSet):
             return str(e)
         
 
-    def scraps_list(self,lst, length):
+    def calculate_scraps(self,lst, length):
         scraps_list = []
         while len(lst) > 0:
+            # first condition : 
             if sum(lst) <= length:
+                print("first condition satisfied")
+                print("bars to remove", lst)
                 scrap = length - sum(lst)
                 scraps_list.append(scrap)
                 lst = []  
@@ -76,7 +79,10 @@ class ScrapsViewset(viewsets.ModelViewSet):
                 base_list.insert(0, ref)
                 print("base list =", base_list)
 
+                #second condition
                 if sum(base_list) <= length:
+                    print("second condition satisfied")
+                    print("bars to remove", base_list)
                     scrap = length - sum(base_list)
                     scraps_list.append(scrap)
                     for i in base_list:
@@ -86,17 +92,70 @@ class ScrapsViewset(viewsets.ModelViewSet):
                     for n in range(1, leng):
                         for i in range(1, leng - n + 1):
                             if sum(base_list) - sum(base_list[i:i+n]) <= length:
-                                if base_list[i-2] and sum(base_list) - sum(base_list[i-2:i+(n-1)]) <= length  and sum(base_list[i-2:i+(n-1)]) < sum(base_list[i:i+n]):
+
+                                # third conditon
+                                if base_list[i-2] and sum(base_list) - sum(base_list[i-2:i+(n-1)]) <= length  and sum(base_list[i-2:i+(n-1)]) <= sum(base_list[i:i+n]):
+                                    print("third condition satisfied")
                                     for x in base_list[i-2:i+(n-1)]:
                                         base_list.remove(x)
+                                    print("bars to remove  = ",base_list)
                                     scrap = length - sum(base_list)
                                     scraps_list.append(scrap)
                                     for x in base_list:
                                         lst.remove(x)
                                     break
+
+                                # fourth condition
+                                elif base_list[i-1] and sum(base_list) - (sum(base_list[i+1:i+n]) + base_list[i-1]) <= length :
+                                    elements_to_remove = base_list[i+1:i+n] +[base_list[i-1]]
+                                    for x in elements_to_remove:
+                                        print("fourth condition satisfied")
+                                        base_list.remove(x)
+                                    print("bars to remove  = ",base_list)
+                                    scrap = length - sum(base_list)
+                                    scraps_list.append(scrap)
+                                    for x in base_list:
+                                        lst.remove(x)
+                                    break
+
+                                # sixth condition
+                                elif base_list[i-1] and sum(base_list) - (sum(base_list[i+1:i+n]) + base_list[i-1]+ base_list[1]) <= length and sum(base_list[i+1:i+n]) + base_list[i-1]+ base_list[1] < sum(base_list[i:i+n]) : 
+                                    if base_list[i-2] and i-2 > 1:
+                                        for a in base_list[i-2: 1:-1]:
+
+                                            # fifth condition 
+                                            if (sum(base_list) - (sum(base_list[i+1:i+n]) + base_list[i-1]+ a)) <= length and (sum(base_list[i+1:i+n]) + base_list[i-1]+ a) < sum(base_list[i:i+n]) : 
+                                                print("fifth condition satisfied")
+                                                elements_to_remove = base_list[i+1:i+n] + [base_list[i-1], a]
+                                                for x in elements_to_remove:
+                                                    print(x, "is removed")
+                                                    base_list.remove(x)
+                                        
+                                                print("bars to remove  = ",base_list)
+                                                scrap = length - sum(base_list)
+                                                scraps_list.append(scrap)
+                                                for x in base_list:
+                                                    lst.remove(x)
+                                                break
+                                            else: 
+                                                print("sixth condition satisfied")
+                                                elements_to_remove = base_list[i+1:i+n] + [base_list[i-1] , base_list[1]]
+                                                for x in elements_to_remove:
+                                                    base_list.remove(x)
+                                                print("bars to remove  = ",base_list)
+                                                scrap = length - sum(base_list)
+                                                scraps_list.append(scrap)
+                                                for x in base_list:
+                                                    lst.remove(x)
+                                                break
+                                        else:
+                                            continue
+                                        break
                                 else:
+                                    print("seventh condition satisfied")
                                     for x in base_list[i:i+n]:
                                         base_list.remove(x)
+                                    print("bars to remove  = ",base_list)
                                     scrap = length - sum(base_list)
                                     scraps_list.append(scrap)
                                     for x in base_list:
@@ -188,7 +247,7 @@ class ScrapsViewset(viewsets.ModelViewSet):
             length = (raw_products.length * 1000) - 50
             slices_list = values
             print("slices_list : ",list (slices_list))
-            scraps_list = self.scraps_list(slices_list, length)
+            scraps_list = self.calculate_scraps(slices_list, length)
 
             for item in scraps_list:
                 scrap= {"code" :  key, "label" : raw_products.label, "length" : item/1000, "mesure" : raw_products.mesure }
