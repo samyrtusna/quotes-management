@@ -66,6 +66,8 @@ function RawProduct(props) {
         pointerField="label"
         darkMode={darkMode}
       />
+      <br />
+      <br />
     </>
   );
 }

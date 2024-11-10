@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models.products import Product
+from .models import Product
 from productsFamilly.models import ProductFamilly
 from productDetails.serializers import ProductDetailsSerializer
 
