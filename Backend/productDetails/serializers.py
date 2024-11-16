@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from .models import ProductDetails
-from Backend.products.models import Product
+from products.models import Product
 from rawProducts.models.raw_products import RawProduct
 
 

@@ -1,6 +1,6 @@
 from django.db import models
 from abstract.models import AbstractModel
-from Backend.products.models import Product
+from products.models import Product
 from .quote import Quote
 from django.contrib.auth.models import User
 

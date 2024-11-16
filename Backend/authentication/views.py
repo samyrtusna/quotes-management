@@ -26,5 +26,5 @@ class LogoutViewSet(ViewSet):
 
     def create(self, request):
         serializer = LogoutSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        serializer.is_valid(raise_exception=True) 
         return Response({'message': 'Logged out successfully'}, status=status.HTTP_204_NO_CONTENT)

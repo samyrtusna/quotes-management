@@ -9,7 +9,7 @@ from authentication.permissions import UserPermission
 from .models.quote import Quote
 from .models.quoteDetails import QuoteDetails
 from rawProducts.models.raw_products import RawProduct
-from Backend.products.models import Product
+from products.models import Product
 from productDetails.models import ProductDetails
 from .serializers import QuoteSerializer, QuoteDetailsSerializer, CreateQuoteSerializer, CreateQuoteDetailsSerializer
 
